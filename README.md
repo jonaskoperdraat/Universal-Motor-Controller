@@ -2,6 +2,8 @@
 
 Universal-Motor-Controller (UMC) is an Arduino based software and hardware intended to drive universal brushed motor, like many circuit based on TDA1085.
 
+**note:** this is a fork of [teo666/Universal-Motor-Controller](https://github.com/teo666/Universal-Motor-Controller). All credits go to [teo666](https://github.com/teo666).
+
 # Main components
 
 UMC consist of two parts:

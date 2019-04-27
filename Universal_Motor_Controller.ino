@@ -39,6 +39,21 @@ niente
 - se dopo un po' di tempo tale valore raggiunge un valore limite (10) allora la
 mi sto trovando nel punto un cui lo zcd e' effettivamente in fase e non si e'
 presentato il disturbo
+-- Google Tranlate IT > EN --
+in some circumstances (due to inductive problems since I could
+register them only when the motor is connected ???) it happens that the zcd circuit is present
+of the disturbances which cause voltage peaks to appear at its output
+that alter the correct phasing; these peaks however have a duration
+very short compared to the time when the zcd square wave is level
+high logic, so I use this variable to distinguish these values
+- when the output state of the zdc changes, the parameters are reset, including
+zcd_error_correction
+- check the input value periodically (in the timer interrupt)
+del zcd: if it is HIGH increment zcd_error_correction otherwise I don't
+anything
+- if after a while this value reaches a limit value (10) then la
+I'm finding myself at the point where the zcd is actually in phase and it's not
+presented the disorder
 */
 volatile uint8_t zcd_error_correction = 0;
 volatile uint8_t found_correct_main_phase = 0;
@@ -49,6 +64,9 @@ volatile uint8_t found_correct_tacho_phase = 0;
 /*
 variabili per la lettura dei valori analogici, contengono il valore delle
 letture
+-- Google Translate IT > EN --
+variables for reading analog values, contain the value of
+readings
 */
 volatile uint8_t HIGH_ANALOG_REG = 0;
 volatile uint8_t LOW_ANALOG_REG = 0;
@@ -56,6 +74,8 @@ volatile uint8_t LOW_ANALOG_REG = 0;
 volatile uint8_t frequency_calc_added = 0;
 
 // il range dell' output va da 0 a 485, a 0 il motore gira a foo 485 val minimo
+// -- Google Translate IT > EN --
+// the range of the output goes from 0 to 485, to 0 the motor turns at foo 485 minimum value
 volatile uint16_t output = 65535; // max value
 volatile uint16_t tacho_min_speed_value = 0;
 volatile uint16_t tacho_max_speed_value = 0;
@@ -64,14 +84,15 @@ uint16_t output_min_speed_value = 0;
 uint16_t output_max_speed_value = 0;
 
 // variabili del pid
-
+// -- translate IT > EN
+// PID variables
 double Setpoint, Input, Output;
 volatile uint8_t computeBarrier = 0;
 
 volatile uint16_t delay_counter = 0;
 volatile uint16_t last_delay_counter = 0;
 
-//////////////////// FUNZIONI DI UTILITA' ///////////////////////
+//////////////////// UTILITY FUNCTIONS ///////////////////////
 
 uint8_t my_digital_read(uint8_t port_reg, uint8_t bit) {
   if (port_reg & _BV(bit))
@@ -170,7 +191,8 @@ Coefficient k_param;
 String serial_read;
 
 // funzione di ricerca dei parametri del pid
-
+// -- Google Translate IT > EN
+// search function for pid parameters
 CoefficientPtr search() { return &k_param; }
 
 #else
@@ -190,38 +212,57 @@ void setup() {
 
   // abilita le interruzioni sul pin 3 e 2 di arduino (bit meno significativo e'
   // il 2) pin 3 = int1 pin 2 = int0
+  // -- Google Translate IT > EN
+  // enable the interruptions on pin 3 and 2 of arduino (least significant bit is 2) 
+  // pin 3 = int1 pin 2 = int0
   EIMSK = 0b00000011;
   ////////////////32
 
   // interruzioni sul rising e falling edge 01, 11 solo rising
+  // -- Google Translate IT > EN
+  // breaks on the rising and falling edge 01, 11 only rising
   EICRA = 0b00001111;
 
   /* configurazione timer 2
    * quindi il valore della variabile putput e' compreso fra 0 e 625
+   * -- Google Translate IT > EN --
+   * timer 2 configuration so the value of the putput variable is between 0 and 625
    */
-
   TCCR2A = 0b00000011;
   TCCR2B = 0b00000001;
   TIMSK2 = 0b00000001;
 
 #ifdef TEST_MODE
   // abilito le interruzioni del timer per la serial.available
+  // Google Translate IT > EN --
+  // enable timer interrupts for serial.available
   TIMSK0 = 0b00000001;
 #else
   // disabilito interruzioni timer 0
+  // Google Translate IT > EN --
+  // disable timer interruptions 0
   TIMSK0 = 0b00000000;
 #endif
 
   // settaggio della lettura analogica
   // setto il voltaggio di riferimento del convertitore alla tensione di
   // alimentazione e il multiplexer per la lettura
+  // -- Google Translate IT > EN --
+  // setting of the analogue reading with reference to the reference voltage
+  // of the converter to the supply voltage and the multiplexer for reading
   ADMUX = (1 << 6) | (SPEED_READ & 0x07);
 
   // abilito l'ADC, le interruzioni hardware e il prescaler a 128 per letture
   // accurate su 10bit
+  // -- Google Translate IT > EN --
+  // enable the ADC, the hardware interruptions and the prescaler at 128 
+  // for accurate readings on 10bit
   ADCSRA = 0b10001111;
   // non setto le lettura automatiche utilizzando il registro ADCSRB perche le
   // lancio a mano
+  // -- Google Translate IT > EN --
+  // I do not read automatic readings using the ADCSRB register because 
+  // I launch them by hand
 
   Serial.begin(9600);
 
@@ -241,6 +282,8 @@ void setup() {
     Serial.println(F("Programming mode"));
 
     // se il bottone e' pigiato chiededre di rilasciarlo
+    // -- Google Translate IT > EN --
+    // if the button is pressed, ask to release it
     check_programming_button();
 
     prog_output = (HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG;
@@ -252,6 +295,8 @@ void setup() {
     }
 
     // se il bottone e' pigiato chiededre di rilasciarlo
+    // -- Google Translate IT > EN --
+    // if the button is pressed, ask to release it
     check_programming_button();
 
     Serial.println(
@@ -260,7 +305,8 @@ void setup() {
 
     button_hold_request(&loop_read_fun, &save_low_speed_exit_fun);
 
-    // se il bottone e' pigiato chiededre di rilasciarlo
+    // -- Google Translate IT > EN --
+    // if the button is pressed, ask to release it
     check_programming_button();
 
     Serial.println(
@@ -271,6 +317,8 @@ void setup() {
 
     Serial.println(F("Configuration completed, enjoy!"));
     // impedisce la modalita' manuale quando si esce dal settaggio
+    // -- Google Translate IT > EN --
+    // prevents manual mode when exiting the setting
     check_programming_button();
   }
   Serial.println(F("Operating mode"));
@@ -300,6 +348,9 @@ void setup() {
 
   // TODO quando sopra un certo livello azzerare il valore di output per rendere
   // il rallentamento migliore
+  // -- Google Translate IT > EN --
+  // TODO when above a certain level reset the output value to render
+  // the best slowdown
   motor_PID->SetOutputLimits(
       0, output_min_speed_value +
              (abs(tick_per_phase - output_min_speed_value) >> 1));
@@ -316,6 +367,8 @@ volatile uint8_t _tacho_trig = 0;
 void loop() {
 
   // valore del potenziometro
+  // -- Google Translate IT > EN --
+  // potentiometer value
   Setpoint = map(((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023,
                  tacho_min_speed_value, tacho_max_speed_value);
 
@@ -376,6 +429,10 @@ void loop() {
    * in realta' ad essere precisi dovrei ricalcolare i valori limite di
    * velocita', ma per cambiamenti minimi (che dovrebbero essere la
    * regola) non e' necessario
+   * -- Google Translate IT > EN --
+   * by making the code invulnerable to changes in the frequency of the AC
+   * in reality to be precise I should recalculate the speed limit values, 
+   * but for minimal changes (which should be the rule) it is not necessary
    * */
   tick_per_phase = zcd_tick_log;
 
@@ -384,6 +441,11 @@ void loop() {
    * imposto l'output al massimo valore, equivale a motore spento
    * questa cosa puo' essere fatta anche nel isr, valutare se lasciare qui o
    * spostare
+   * -- Google Translate IT > EN --
+   * zcd circuit fault: in the event of a zcd fault, disabling the triac and
+   * setting the output to the maximum value, it is equivalent to the engine
+   * off, this thing can also be done in the isr, evaluate whether to leave 
+   * here or move
    * */
   if (tick_after_zcd > ZCD_FAIL_LIMIT) {
     output = 65535;
@@ -392,6 +454,8 @@ void loop() {
 
   /**
    * rilevamento blocco del motore
+   * -- Google Translate IT > EN --
+   * engine block detection
    * */
   if (tick_after_tacho > TACHO_FAIL_LIMIT) {
     //do something
@@ -406,15 +470,23 @@ void loop() {
 // handler dell' interrupt associato al pin 2 di arduino
 // utilizzato per la sincronizzazione di fase, e' connesso
 // all'uscita del circuito di ZCD
+// -- Google Translate IT > EN --
+// interrupt handler associated with arduino pin 2 used 
+// for phase synchronization, connected to the ZCD circuit output
 ISR(INT0_vect) {
   zcd_error_correction = 0;
   found_correct_main_phase = 0;
   // lancia una lettura del valore analogico
+  // -- Google Translate IT > EN --
+  // launches an analog value reading
   ANALOG_READ();
 }
 
 // handler dell' interrupt associato al pin 3 di arduino
 // utilizzato per il rilevamento del tacogeneratore
+// -- Google Translate IT > EN --
+// interrupt handler associated with pin 3 of arduino used for 
+// the detection of the tacogenerator
 ISR(INT1_vect) {
   tacho_error_correction = 0;
   found_correct_tacho_phase = 0;
@@ -424,6 +496,10 @@ ISR(INT1_vect) {
 // effettua dei controlli periodici, quali l'incremento del contatore
 // per poter far si che il bottone do programmazione funzioni c'e' bisogno dello
 // zcd
+// -- Google Translate IT > EN --
+// interrupt associated with the timer, inside a network half-wave it carries 
+// out periodic checks, such as the counter increment to be able to make the 
+// programming button work, there is a need for the zcd
 ISR(TIMER2_OVF_vect) {
   //
   // zcd
@@ -480,12 +556,16 @@ ISR(TIMER2_OVF_vect) {
 
   if (tick_after_zcd >= output && !triac_state) {
     // accendi il triac
+    // -- Google Translate IT > EN --
+    // turn on the triac
     TURN_ON_TRIAC();
     triac_state = 1;
   }
 }
 
 // al completamento della lettura del valore del potenziometro salva i valori
+// -- Google Translate IT > EN --
+// on completion of reading the value of the potentiometer saves the values
 ISR(ADC_vect) {
   LOW_ANALOG_REG = ADCL;
   HIGH_ANALOG_REG = ADCH;
